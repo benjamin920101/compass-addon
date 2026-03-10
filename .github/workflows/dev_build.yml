@@ -1,8 +1,6 @@
 name: Publish Development Build
 on:
     push:
-        branches:
-            - "1.21.1"
 
 env:
     MINECRAFT_VERSION: "1.21.1"
