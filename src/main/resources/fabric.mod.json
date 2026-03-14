@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "id": "addon-template",
+  "id": "compass-addon",
   "version": "${version}",
-  "name": "Addon Template",
-  "description": "An addon template for Meteor Client addons.",
+  "name": "Compass Mod",
+  "description": "A compass addon for Meteor Client.",
   "authors": [
-    "seasnail"
+    "benja"
   ],
   "contact": {
-    "repo": "https://github.com/MeteorDevelopment/meteor-addon-template"
+    "repo": "https://github.com/benja/compass-addon"
   },
   "icon": "assets/template/icon.png",
   "environment": "client",
   "entrypoints": {
-    "meteor": [
+    "main": [
       "com.example.addon.AddonTemplate"
     ]
   },
