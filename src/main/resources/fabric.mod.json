@@ -13,7 +13,7 @@
   "icon": "assets/template/icon.png",
   "environment": "client",
   "entrypoints": {
-    "main": [
+    "meteor": [
       "com.example.addon.AddonTemplate"
     ]
   },
