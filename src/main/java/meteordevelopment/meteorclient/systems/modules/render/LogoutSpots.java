@@ -256,7 +256,7 @@ public class LogoutSpots extends Module {
             double i = text.getWidth(name) / 2.0 + text.getWidth(healthText) / 2.0;
             Renderer2D.COLOR.begin();
             Renderer2D.COLOR.quad(-i, 0, i * 2, text.getHeight(), nameBackgroundColor.get());
-            Renderer2D.COLOR.render(event.matrices);
+            Renderer2D.COLOR.render(event.matrixStack);
 
             // Render name and health texts
             text.beginBig();
