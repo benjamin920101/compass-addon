@@ -190,7 +190,7 @@ public class LogoutSpots extends Module {
 
     @EventHandler
     private void onRender2D(Render2DEvent event) {
-        for (Entry player : players) player.render2D();
+        for (Entry player : players) player.render2D(event);
     }
 
     @Override
@@ -232,7 +232,7 @@ public class LogoutSpots extends Module {
             else event.renderer.sideHorizontal(x, y, z, x + xWidth, z, sideColor.get(), lineColor.get(), shapeMode.get());
         }
 
-        public void render2D() {
+        public void render2D(Render2DEvent event) {
             if (!PlayerUtils.isWithinCamera(x, y, z, mc.options.getViewDistance().getValue() * 16)) return;
 
             TextRenderer text = TextRenderer.get();
@@ -256,7 +256,7 @@ public class LogoutSpots extends Module {
             double i = text.getWidth(name) / 2.0 + text.getWidth(healthText) / 2.0;
             Renderer2D.COLOR.begin();
             Renderer2D.COLOR.quad(-i, 0, i * 2, text.getHeight(), nameBackgroundColor.get());
-            Renderer2D.COLOR.render();
+            Renderer2D.COLOR.render(event.matrices);
 
             // Render name and health texts
             text.beginBig();
