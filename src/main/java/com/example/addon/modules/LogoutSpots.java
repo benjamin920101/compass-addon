@@ -26,7 +26,6 @@ import java.util.UUID;
 
 public class LogoutSpots extends Module {
     private static final Color GREEN = new Color(25, 225, 25);
-    private static final Color ORANGE = new Color(225, 105, 25);
     private static final Color RED = new Color(225, 25, 25);
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -61,14 +60,14 @@ public class LogoutSpots extends Module {
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
         .name("side-color")
         .description("The side color.")
-        .defaultValue(new SettingColor(255, 0, 255, 55))
+        .defaultValue(new SettingColor(225, 25, 25, 55))
         .build()
     );
 
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
         .name("line-color")
         .description("The line color.")
-        .defaultValue(new SettingColor(255, 0, 255))
+        .defaultValue(new SettingColor(225, 25, 25))
         .build()
     );
 
@@ -188,6 +187,13 @@ public class LogoutSpots extends Module {
         for (Entry player : players) player.render2D(event);
     }
 
+    // Check if a player is currently in the player list
+    private boolean isPlayerOnline(UUID uuid) {
+        if (mc.getNetworkHandler() == null) return false;
+        return mc.getNetworkHandler().getPlayerList().stream()
+            .anyMatch(entry -> entry.getProfile().id().equals(uuid));
+    }
+
     @Override
     public String getInfoString() {
         return Integer.toString(players.size());
@@ -223,8 +229,16 @@ public class LogoutSpots extends Module {
         }
 
         public void render3D(Render3DEvent event) {
-            if (fullHeight.get()) event.renderer.box(x, y, z, x + xWidth, y + height, z + zWidth, sideColor.get(), lineColor.get(), shapeMode.get(), 0);
-            else event.renderer.sideHorizontal(x, y, z, x + xWidth, z, sideColor.get(), lineColor.get(), shapeMode.get());
+            Color currentSideColor = isPlayerOnline(uuid) ? GREEN : sideColor.get();
+            Color currentLineColor = isPlayerOnline(uuid) ? GREEN : lineColor.get();
+            
+            if (fullHeight.get()) {
+                event.renderer.box(x, y, z, x + xWidth, y + height, z + zWidth, 
+                    currentSideColor, currentLineColor, shapeMode.get(), 0);
+            } else {
+                event.renderer.sideHorizontal(x, y, z, x + xWidth, z, 
+                    currentSideColor, currentLineColor, shapeMode.get());
+            }
         }
 
         public void render2D(Render2DEvent event) {
@@ -238,25 +252,21 @@ public class LogoutSpots extends Module {
 
             NametagUtils.begin(pos);
 
-            // Compute health things
-            double healthPercentage = (double) health / maxHealth;
+            // Use green if player is online, red if offline
+            Color color = isPlayerOnline(uuid) ? GREEN : RED;
 
-            // Get health color
-            Color healthColor;
-            if (healthPercentage <= 0.333) healthColor = RED;
-            else if (healthPercentage <= 0.666) healthColor = ORANGE;
-            else healthColor = GREEN;
-
-            // Render background
-            double i = text.getWidth(name) / 2.0 + text.getWidth(healthText) / 2.0;
+            // Render background (larger to fit big health text)
+            double nameWidth = text.getWidth(name);
+            double healthWidth = text.getWidth(healthText);
+            double totalWidth = nameWidth + healthWidth;
             Renderer2D.COLOR.begin();
-            Renderer2D.COLOR.quad(-i, 0, i * 2, text.getHeight(), nameBackgroundColor.get());
+            Renderer2D.COLOR.quad(-totalWidth / 2, 0, totalWidth, text.getHeight() * 2, nameBackgroundColor.get());
             Renderer2D.COLOR.render(new net.minecraft.client.util.math.MatrixStack());
 
-            // Render name and health texts
+            // Render name and health texts (bigger)
             text.beginBig();
-            double hX = text.render(name, -i, 0, nameColor.get());
-            text.render(healthText, hX, 0, healthColor);
+            double hX = text.render(name, -totalWidth / 2, 0, color);
+            text.render(healthText, hX, 0, color);
             text.end();
 
             NametagUtils.end();
