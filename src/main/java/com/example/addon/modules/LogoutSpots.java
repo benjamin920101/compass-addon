@@ -191,7 +191,7 @@ public class LogoutSpots extends Module {
     private boolean isPlayerOnline(UUID uuid) {
         if (mc.getNetworkHandler() == null) return false;
         return mc.getNetworkHandler().getPlayerList().stream()
-            .anyMatch(entry -> entry.getProfile().id().equals(uuid));
+            .anyMatch(entry -> entry.getProfile().getId().equals(uuid));
     }
 
     @Override
