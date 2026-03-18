@@ -1,29 +1,28 @@
 package com.example.addon.modules;
 
 import com.example.addon.AddonTemplate;
+import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.ColorSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Box;
 
-public class ModuleExample extends Module {
-    private final SettingGroup sgGeneral = this.settings.getDefaultGroup();
-    private final SettingGroup sgRender = this.settings.createGroup("Render");
+import java.util.ArrayList;
+import java.util.List;
 
-    /**
-     * Example setting.
-     * The {@code name} parameter should be in kebab-case.
-     * If you want to access the setting from another class, simply make the setting {@code public}, and use
-     * {@link meteordevelopment.meteorclient.systems.modules.Modules#get(Class)} to access the {@link Module} object.
-     */
+public class ModuleExample extends Module {
+    private static final Color GREEN = new Color(25, 225, 25);
+
+    private final SettingGroup sgGeneral = this.settings.getDefaultGroup();
+
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
         .name("scale")
         .description("The size of the marker.")
@@ -32,35 +31,66 @@ public class ModuleExample extends Module {
         .build()
     );
 
-    private final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
-        .name("color")
-        .description("The color of the marker.")
-        .defaultValue(Color.MAGENTA)
-        .build()
-    );
+    private final List<PlayerEntity> players = new ArrayList<>();
 
     /**
      * The {@code name} parameter should be in kebab-case.
      */
     public ModuleExample() {
-        super(AddonTemplate.CATEGORY, "world-origin", "An example module that highlights the center of the world.");
+        super(AddonTemplate.CATEGORY, "world-origin", "An example module that highlights players with green boxes.");
     }
 
-    /**
-     * Example event handling method.
-     * Requires {@link AddonTemplate#getPackage()} to be setup correctly, will fail silently otherwise.
-     */
+    @Override
+    public void onActivate() {
+        updatePlayers();
+    }
+
+    private void updatePlayers() {
+        players.clear();
+        for (Entity entity : mc.world.getEntities()) {
+            if (entity instanceof PlayerEntity && entity != mc.player) {
+                players.add((PlayerEntity) entity);
+            }
+        }
+    }
+
+    @EventHandler
+    private void onEntityAdded(EntityAddedEvent event) {
+        if (event.entity instanceof PlayerEntity && event.entity != mc.player) {
+            if (!players.contains(event.entity)) {
+                players.add((PlayerEntity) event.entity);
+            }
+        }
+    }
+
+    @EventHandler
+    private void onTick(TickEvent.Post event) {
+        updatePlayers();
+    }
+
     @EventHandler
     private void onRender3d(Render3DEvent event) {
-        // Create & stretch the marker object
-        Box marker = new Box(BlockPos.ORIGIN);
+        for (PlayerEntity player : players) {
+            renderPlayerBox(event, player);
+        }
+    }
+
+    private void renderPlayerBox(Render3DEvent event, PlayerEntity player) {
+        double halfWidth = player.getWidth() / 2;
+        double x = player.getX() - halfWidth;
+        double y = player.getY();
+        double z = player.getZ() - halfWidth;
+        double xWidth = player.getBoundingBox().getLengthX();
+        double zWidth = player.getBoundingBox().getLengthZ();
+        double height = player.getBoundingBox().getLengthY();
+
+        Box marker = new Box(x, y, z, x + xWidth, y + height, z + zWidth);
         marker.stretch(
             scale.get() * marker.getLengthX(),
             scale.get() * marker.getLengthY(),
             scale.get() * marker.getLengthZ()
         );
 
-        // Render the marker based on the color setting
-        event.renderer.box(marker, color.get(), color.get(), ShapeMode.Both, 0);
+        event.renderer.box(marker, GREEN, GREEN, ShapeMode.Both, 0);
     }
 }
